@@ -291,11 +291,11 @@ export class IpfsCredentialResolver implements CredentialResolver {
         reject();
       }, this.IPFS_RESOLVE_TIMEOUT);
     });
-    const resolve = Promise.any([
+
+    return Promise.race([
+      timeout,
       this._ipfsStore.get(cid.toV0().toString()),
       this._ipfsStore.get(cid.toV1().toString()),
-    ]);
-
-    return Promise.race([timeout, resolve]) as Promise<string>;
+    ]) as Promise<string>;
   }
 }
