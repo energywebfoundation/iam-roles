@@ -206,7 +206,7 @@ export class IpfsCredentialResolver implements CredentialResolver {
             claimToken = await this.resolveFromIpfs(serviceEndpoint);
           } catch (e) {
             process.stdout.write(
-              `[IpfsCredentialResolver] Can not resolve ${serviceEndpoint}. Claims is skipped\n`
+              `[IpfsCredentialResolver] Can not resolve ${serviceEndpoint}. Claim is skipped\n`
             );
             return {};
           }
@@ -250,7 +250,7 @@ export class IpfsCredentialResolver implements CredentialResolver {
             credential = await this.resolveFromIpfs(serviceEndpoint);
           } catch (e) {
             process.stdout.write(
-              `[IpfsCredentialResolver] Can not resolve ${serviceEndpoint}. Claims is skipped\n`
+              `[IpfsCredentialResolver] Can not resolve ${serviceEndpoint}. Claim is skipped\n`
             );
             return {};
           }
