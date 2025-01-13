@@ -24,10 +24,12 @@ import {
 import { CredentialResolver } from './credential-resolver';
 import { VerifiableCredential } from '@ew-did-registry/credentials-interface';
 import { RoleCredentialSubject } from '@energyweb/credential-governance';
+import { CID } from 'multiformats/cid';
 
 export class IpfsCredentialResolver implements CredentialResolver {
   private _ipfsStore: IDidStore;
   private _resolver: Resolver;
+  private IPFS_RESOLVE_TIMEOUT = 3000;
 
   constructor(
     provider: providers.Provider,
@@ -198,7 +200,16 @@ export class IpfsCredentialResolver implements CredentialResolver {
           if (!isCID(serviceEndpoint)) {
             return {};
           }
-          const claimToken = await this._ipfsStore.get(serviceEndpoint);
+
+          let claimToken: string;
+          try {
+            claimToken = await this.resolveFromIpfs(serviceEndpoint);
+          } catch (e) {
+            process.stdout.write(
+              `[IpfsCredentialResolver] Can not resolve ${serviceEndpoint}. Claims is skipped\n`
+            );
+            return {};
+          }
           let rolePayload: RolePayload | undefined;
           // expect that JWT has 3 dot-separated parts
           if (claimToken.split('.').length === 3) {
@@ -234,10 +245,15 @@ export class IpfsCredentialResolver implements CredentialResolver {
           if (!isCID(serviceEndpoint)) {
             return {};
           }
-          if (!this._ipfsStore) {
-            throw new Error('IPFS Store (DIDStore) is not defined');
+          let credential: string;
+          try {
+            credential = await this.resolveFromIpfs(serviceEndpoint);
+          } catch (e) {
+            process.stdout.write(
+              `[IpfsCredentialResolver] Can not resolve ${serviceEndpoint}. Claims is skipped\n`
+            );
+            return {};
           }
-          const credential = await this._ipfsStore.get(serviceEndpoint);
           let vc;
           // expect that JWT would have 3 dot-separated parts, VC is non-JWT credential
           if (!(credential.split('.').length === 3)) {
@@ -266,5 +282,20 @@ export class IpfsCredentialResolver implements CredentialResolver {
     const resolvedDIDDocument = await this._resolver.read(did);
     didDocumentCache?.setDIDDocument(did, resolvedDIDDocument);
     return resolvedDIDDocument;
+  }
+
+  private async resolveFromIpfs(service: string): Promise<string> {
+    const cid = CID.parse(service);
+    const timeout = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject();
+      }, this.IPFS_RESOLVE_TIMEOUT);
+    });
+    const resolve = Promise.any([
+      this._ipfsStore.get(cid.toV0().toString()),
+      this._ipfsStore.get(cid.toV1().toString()),
+    ]);
+
+    return Promise.race([timeout, resolve]) as Promise<string>;
   }
 }
