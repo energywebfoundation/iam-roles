@@ -292,7 +292,7 @@ export class IpfsCredentialResolver implements CredentialResolver {
       }, this.IPFS_RESOLVE_TIMEOUT);
     });
 
-    return Promise.race([
+    return Promise.any([
       timeout,
       this._ipfsStore.get(cid.toV0().toString()),
       this._ipfsStore.get(cid.toV1().toString()),
