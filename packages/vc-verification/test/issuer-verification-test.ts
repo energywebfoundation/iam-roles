@@ -430,7 +430,9 @@ function testSuite() {
     });
 
     it('Revocation status check for VC with valid expiration date should pass', async () => {
-      adminVC.expirationDate = '2023-06-24T11:28:28.103Z';
+      let expirationDate = new Date();
+      expirationDate.setFullYear(new Date().getFullYear() + 1);
+      adminVC.expirationDate = expirationDate.toISOString();
       let ipfsCID = await didStore.save(JSON.stringify(adminVC));
       const serviceId = adminRole;
       const updateData: IUpdateData = {
